@@ -1,8 +1,18 @@
 const $ = (id) => document.getElementById(id);
 const api = async (path, opts = {}) => {
+  const headers = {
+    "Content-Type": "application/json",
+    ...(opts.headers || {}),
+  };
+  const userKey = localStorage.getItem("autosense_deepseek_key") || "";
+  const userBaseUrl = localStorage.getItem("autosense_deepseek_base_url") || "";
+  const userModel = localStorage.getItem("autosense_deepseek_model") || "";
+  if (userKey) headers["X-User-DeepSeek-Key"] = userKey;
+  if (userBaseUrl) headers["X-User-DeepSeek-Base-Url"] = userBaseUrl;
+  if (userModel) headers["X-User-DeepSeek-Model"] = userModel;
   const res = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
     ...opts,
+    headers,
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "请求失败");
@@ -945,7 +955,7 @@ async function sendIntegration() {
   </div>`;
 }
 
-function renderConfig(config) {
+renderConfig = function(config) {
   $("deepseekBaseUrl").value = config.deepseek_base_url || "https://api.deepseek.com";
   $("deepseekModel").value = config.deepseek_model || "deepseek-v4-flash";
   const rows = [
@@ -956,9 +966,9 @@ function renderConfig(config) {
     ["客户机会", config.crm_webhook_configured ? "CRM已接入" : "本地机会队列"],
   ];
   $("configStatus").innerHTML = rows.map(([name, value]) => `<div class="status-card"><span>${escapeHtml(name)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
-}
+};
 
-async function saveConfig() {
+saveConfig = async function() {
   const payload = {
     LLM_PROVIDER: "deepseek",
     DEEPSEEK_BASE_URL: $("deepseekBaseUrl").value || "https://api.deepseek.com",
@@ -979,12 +989,68 @@ async function saveConfig() {
   renderConfig(cfg);
   $("health").textContent = `deepseek ${cfg.deepseek_configured ? "已接入" : "本地规则兜底"} · 新闻源 ${cfg.news_api_configured || cfg.bing_configured || cfg.serpapi_configured ? "商业API已接入" : "公开RSS"}`;
   alert("配置已保存");
+};
+
+testLLM = async function() {
+  await saveConfig();
+  const result = await api("/api/ai/test", { method: "POST", body: JSON.stringify({}) });
+  $("configStatus").innerHTML = `<div class="status-card wide"><span>DeepSeek连接测试</span><strong>${result.ok ? "连接成功" : "需要检查配置"}</strong><p>${escapeHtml(result.message || "")}</p></div>`;
+};
+
+function renderConfig(config) {
+  const localKey = localStorage.getItem("autosense_deepseek_key") || "";
+  const localBaseUrl = localStorage.getItem("autosense_deepseek_base_url") || config.deepseek_base_url || "https://api.deepseek.com";
+  const localModel = localStorage.getItem("autosense_deepseek_model") || config.deepseek_model || "deepseek-v4-flash";
+  $("deepseekBaseUrl").value = localBaseUrl;
+  $("deepseekModel").value = localModel;
+  const rows = [
+    ["大模型", localKey || config.deepseek_configured ? "DeepSeek 已接入" : "本地规则兜底"],
+    ["新闻搜索", config.news_api_configured || config.bing_configured || config.serpapi_configured ? "服务端搜索 API 已接入" : "公开 RSS 与本地规则"],
+    ["研发协同", config.jira_webhook_configured ? "Jira 已接入" : "本地待推送"],
+    ["团队通知", config.feishu_webhook_configured || config.slack_webhook_configured ? "通知渠道已接入" : "待配置 Webhook"],
+    ["客户机会", config.crm_webhook_configured ? "CRM 已接入" : "本地机会队列"],
+  ];
+  $("configStatus").innerHTML = rows.map(([name, value]) => `<div class="status-card"><span>${escapeHtml(name)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+}
+
+async function saveConfig() {
+  const deepseekKey = $("deepseekKey").value.trim();
+  if (deepseekKey) {
+    if (!deepseekKey.startsWith("sk-")) {
+      alert("DeepSeek API Key 格式不正确，应以 sk- 开头。");
+      return;
+    }
+    localStorage.setItem("autosense_deepseek_key", deepseekKey);
+  }
+  localStorage.setItem("autosense_deepseek_base_url", $("deepseekBaseUrl").value || "https://api.deepseek.com");
+  localStorage.setItem("autosense_deepseek_model", $("deepseekModel").value || "deepseek-v4-flash");
+  const cfg = await api("/api/config");
+  renderConfig(cfg);
+  $("health").textContent = `DeepSeek ${localStorage.getItem("autosense_deepseek_key") ? "已接入" : "本地规则兜底"} · 新闻源 ${cfg.news_api_configured || cfg.bing_configured || cfg.serpapi_configured ? "商业 API" : "公开 RSS"}`;
+  alert("API 配置已保存到当前浏览器，不会提交到仓库或公共服务端。");
 }
 
 async function testLLM() {
   await saveConfig();
   const result = await api("/api/ai/test", { method: "POST", body: JSON.stringify({}) });
-  $("configStatus").innerHTML = `<div class="status-card wide"><span>DeepSeek连接测试</span><strong>${result.ok ? "连接成功" : "需要检查配置"}</strong><p>${escapeHtml(result.message || "")}</p></div>`;
+  $("configStatus").innerHTML = `<div class="status-card wide"><span>DeepSeek 连接测试</span><strong>${result.ok ? "连接成功" : "需要检查配置"}</strong><p>${escapeHtml(result.message || "")}</p></div>`;
+}
+
+function clearConfig() {
+  localStorage.removeItem("autosense_deepseek_key");
+  localStorage.removeItem("autosense_deepseek_base_url");
+  localStorage.removeItem("autosense_deepseek_model");
+  $("deepseekKey").value = "";
+  refreshAll();
+}
+
+const configButtons = document.querySelector("#config .button-row");
+if (configButtons && !document.querySelector("[data-clear-browser-config]")) {
+  configButtons.insertAdjacentHTML("beforeend", `<button data-clear-browser-config onclick="clearConfig()">清除本浏览器配置</button>`);
+}
+const configHint = document.querySelector("#config .panel .hint");
+if (configHint) {
+  configHint.textContent = "填写后系统会优先使用你的 DeepSeek API 进行需求拆解、方案生成和资料问答。Key 仅保存在当前浏览器，请求时临时带给后端，不会提交到仓库。";
 }
 
 refreshAll().catch((err) => {

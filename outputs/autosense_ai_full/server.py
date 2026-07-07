@@ -22,6 +22,7 @@ MONITOR_PATH = BASE_DIR / "monitor_config.json"
 PROFILE_PATH = BASE_DIR / "product_profile.json"
 MONITOR_STATE = {"running": False, "last_run": None, "last_count": 0, "last_error": "", "thread": None}
 LLM_STATE = {"last_call": None, "last_error": "", "call_count": 0}
+REQUEST_CONTEXT = threading.local()
 
 
 def now_iso():
@@ -49,14 +50,21 @@ def valid_deepseek_key(value):
     return value.startswith("sk-") and len(value) >= 20
 
 
+def request_llm_config():
+    return getattr(REQUEST_CONTEXT, "llm_config", {}) or {}
+
+
 def read_config():
     load_env_file()
     provider = os.getenv("LLM_PROVIDER", "deepseek")
+    user_cfg = request_llm_config()
+    user_deepseek_configured = valid_deepseek_key(user_cfg.get("deepseek_api_key"))
     return {
         "llm_provider": provider,
-        "deepseek_configured": valid_deepseek_key(os.getenv("DEEPSEEK_API_KEY")),
-        "deepseek_base_url": os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-        "deepseek_model": os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash"),
+        "deepseek_configured": user_deepseek_configured or valid_deepseek_key(os.getenv("DEEPSEEK_API_KEY")),
+        "user_deepseek_configured": user_deepseek_configured,
+        "deepseek_base_url": user_cfg.get("deepseek_base_url") or os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+        "deepseek_model": user_cfg.get("deepseek_model") or os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash"),
         "openai_configured": bool(os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY")),
         "openai_base_url": os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
         "openai_model": os.getenv("OPENAI_MODEL") or os.getenv("LLM_MODEL") or "gpt-4o-mini",
@@ -1062,8 +1070,14 @@ def local_summary(text, max_len=160):
 
 
 def call_llm(messages, temperature=0.2):
+    user_cfg = request_llm_config()
+    user_key = clean_secret(user_cfg.get("deepseek_api_key"))
     provider = os.getenv("LLM_PROVIDER", "deepseek").lower()
-    if provider == "deepseek" or (os.getenv("DEEPSEEK_API_KEY") and not os.getenv("OPENAI_API_KEY")):
+    if user_key:
+        api_key = user_key
+        base_url = user_cfg.get("deepseek_base_url") or os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+        model = user_cfg.get("deepseek_model") or os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash")
+    elif provider == "deepseek" or (os.getenv("DEEPSEEK_API_KEY") and not os.getenv("OPENAI_API_KEY")):
         api_key = clean_secret(os.getenv("DEEPSEEK_API_KEY"))
         base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
         model = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash")
@@ -1612,6 +1626,13 @@ def monitor_status():
 
 
 class Handler(BaseHTTPRequestHandler):
+    def set_request_context(self):
+        REQUEST_CONTEXT.llm_config = {
+            "deepseek_api_key": clean_secret(self.headers.get("X-User-DeepSeek-Key", "")),
+            "deepseek_base_url": self.headers.get("X-User-DeepSeek-Base-Url", "").strip(),
+            "deepseek_model": self.headers.get("X-User-DeepSeek-Model", "").strip(),
+        }
+
     def _send(self, status=200, body=None, content_type="application/json"):
         self.send_response(status)
         self.send_header("Content-Type", content_type + "; charset=utf-8")
@@ -1636,6 +1657,7 @@ class Handler(BaseHTTPRequestHandler):
         return json.loads(self.rfile.read(length).decode("utf-8"))
 
     def do_GET(self):
+        self.set_request_context()
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
@@ -1714,6 +1736,7 @@ class Handler(BaseHTTPRequestHandler):
         return self._send(200, target.read_bytes(), content_type)
 
     def do_POST(self):
+        self.set_request_context()
         path = urlparse(self.path).path
         try:
             payload = self.read_json()
@@ -1858,8 +1881,10 @@ def main():
     if read_monitor_config().get("enabled"):
         start_monitor()
     port = int(os.getenv("PORT", "8765"))
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"AutoSense AI running at http://127.0.0.1:{port}")
+    host = os.getenv("HOST") or ("0.0.0.0" if os.getenv("PORT") else "127.0.0.1")
+    server = ThreadingHTTPServer((host, port), Handler)
+    shown_host = "127.0.0.1" if host == "0.0.0.0" else host
+    print(f"AutoSense AI running at http://{shown_host}:{port}")
     server.serve_forever()
 
 

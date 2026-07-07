@@ -1,37 +1,22 @@
 # AutoSense AI
 
-面向车载激光雷达产品团队的 AI 产品决策工作台。
+面向车载激光雷达产品团队的 AI 产品决策工作台。系统把公开市场情报、竞品动态、客户需求字段、我方产品画像和资料依据库整合到一个动态 Web 应用中，帮助产品经理完成机会判断、需求拆解、竞品应对、产品方案生成和研发/售前协同。
 
-AutoSense AI 服务产品经理、战略市场、售前方案和研发协同场景，将公开市场情报、竞品动态、客户字段完整性和我方产品画像整合起来，帮助团队完成机会判断、需求拆解、竞品应对、产品方案生成和协同推进。
+GitHub: https://github.com/MwngxuZhang/autosense-ai
 
-## 项目入口
+## 页面预览
 
-### 在线体验版
+![工作台](assets/screenshots/workbench.svg)
 
-仓库提供 GitHub Pages 静态体验版，位于：
+![决策中心](assets/screenshots/decision-center.svg)
 
-```text
-docs/
-```
+![产品画像维护](assets/screenshots/product-profile.svg)
 
-启用方式：
+## 动态体验方式
 
-1. 打开 GitHub 仓库 `Settings -> Pages`。
-2. Source 选择 `Deploy from a branch`。
-3. Branch 选择 `main`，目录选择 `/docs`。
-4. 保存后访问 GitHub 生成的 Pages 地址。
+本项目不是静态页面。完整应用由 Python 后端、SQLite 数据库、前端工作台和 DeepSeek API 调用链组成。
 
-在线体验版支持用户在浏览器里配置自己的 API Key。Key 只保存到当前浏览器 localStorage，不会提交到仓库。由于 GitHub Pages 是静态托管，浏览器直连模型接口可能受到 CORS 限制；如果失败，页面会自动切换到本地规则体验。
-
-### 本地完整版
-
-应用代码位于：
-
-```text
-outputs/autosense_ai_full
-```
-
-运行方式：
+### 本地运行
 
 ```powershell
 cd outputs/autosense_ai_full
@@ -44,26 +29,47 @@ python server.py
 http://127.0.0.1:8765
 ```
 
+### 云端部署
+
+仓库已提供 Render/Railway/Fly.io 一类平台可用的动态部署文件：
+
+- `requirements.txt`
+- `Procfile`
+- `render.yaml`
+
+在 Render 上可以直接连接本仓库，使用 `render.yaml` 创建 Web Service。部署后访问平台生成的 URL 即可体验完整后端能力。
+
+## API 配置
+
+公开体验时不把 API Key 写入仓库。用户在页面 `API配置` 中填写自己的 DeepSeek Key：
+
+- Key 只保存到当前浏览器 `localStorage`。
+- 每次请求时临时带给后端调用模型。
+- 服务端不会把体验者的 Key 写入仓库或公共配置文件。
+- 没有 Key 时，系统会使用本地规则兜底，核心页面仍可运行。
+
+本地开发者也可以复制 `outputs/autosense_ai_full/.env.example` 为 `.env`，配置服务端专用 Key。
+
 ## 核心模块
 
-- 工作台：核心使用路径、当前重点机会、产品动作入口。
-- 市场雷达：公开市场情报抓取、摘要、分类和机会评分。
-- 决策中心：证据链结论、市场地图、情报简报、Win/Loss 复盘、供应商评分卡。
-- 需求分析：客户信息完整性、应用场景、性能需求、风险和待确认问题。
-- 竞品对比：竞品技术路线、感知能力、车规可靠性、公开客户和 Battlecard。
-- 产品方案：产品定位、研发任务、验收指标和风险提示。
-- 资料依据库：保存产品手册、测试说明、客户纪要和方案备忘录，支持基于资料问答。
-- 产品画像：产品线和目标客户模块化维护。
-- 协同推进：支持 Jira、飞书、CRM、Slack Webhook。
+- 工作台：聚合核心流程、当前机会、推荐动作和系统状态。
+- 市场雷达：抓取公开 RSS/搜索源，对市场信号做分类、摘要和机会评分。
+- 决策中心：输出证据链结论、竞品威胁、客户字段缺口和下一步产品动作。
+- 需求分析：把客户线索拆解为场景、指标、交付物、风险和待确认问题。
+- 竞品对比：维护竞品技术路线、公开客户、威胁判断和 Battlecard。
+- 产品方案：基于客户需求、我方产品线、竞品证据和资料依据库生成方案草案。
+- 资料依据库：沉淀产品手册、测试说明、客户纪要和方案备忘录，用于降低 AI 幻觉风险。
+- 产品画像：模块化维护产品线、目标客户、机会关键词和客户字段要求。
+- 协同推进：将产品动作推送到 Jira、飞书、CRM、Slack 等外部工具。
 
-## 相关文档
+## 简历材料
 
-- `outputs/AutoSense_AI_项目调研报告.md`
-- `outputs/AutoSense_AI_类比竞品调研报告.md`
-- `outputs/AutoSense_AI_真实运行版技术文档.md`
-- `outputs/AutoSense_AI_P0_P1_P2能力补齐技术文档.md`
-- `outputs/AutoSense_AI_产品经理简历项目包装.md`
+简历项目包装文档见：
+
+```text
+outputs/AutoSense_AI_产品经理简历项目包装.md
+```
 
 ## 安全说明
 
-真实 API Key 只应写入本地 `.env`，不要提交到 GitHub。仓库中提供 `.env.example` 作为配置模板。
+真实 API Key 不要提交到 GitHub。仓库已通过 `.gitignore` 排除 `.env`、数据库文件、日志和缓存文件。
