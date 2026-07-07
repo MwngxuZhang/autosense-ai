@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "interval_minutes": 30,
+  "queries": [
+    "automotive lidar ADAS L3 Europe",
+    "LiDAR high level autonomous driving OEM design win",
+    "车载 激光雷达 高阶智驾 定点 量产"
+  ],
+  "rss_urls": [],
+  "web_urls": [],
+  "push_threshold": 80,
+  "push_channels": [
+    "crm"
+  ]
+}

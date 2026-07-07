@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoSense AI</title>
+  <link rel="stylesheet" href="/static/styles.css?v=20260707-modules">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">A</div>
+      <div>
+        <strong>AutoSense AI</strong>
+        <span>智驾传感器产品工作台</span>
+      </div>
+    </div>
+    <button class="nav active" data-view="dashboard">工作台</button>
+    <button class="nav" data-view="decision">决策中心</button>
+    <button class="nav" data-view="intel">市场雷达</button>
+    <button class="nav" data-view="requirements">需求分析</button>
+    <button class="nav" data-view="competitors">竞品对比</button>
+    <button class="nav" data-view="proposals">产品方案</button>
+    <button class="nav" data-view="integrations">协同推进</button>
+    <div class="nav-group">知识与配置</div>
+    <button class="nav" data-view="rag">资料依据库</button>
+    <button class="nav" data-view="evals">AI评测</button>
+    <button class="nav" data-view="capabilities">版本规划</button>
+    <button class="nav" data-view="differentiation">产品价值</button>
+    <button class="nav" data-view="profile">产品画像</button>
+    <button class="nav" data-view="system">系统说明</button>
+    <button class="nav" data-view="config">API配置</button>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <h1 id="pageTitle">工作台</h1>
+        <p id="pageDesc">面向智驾传感器产品团队的市场机会与产品决策工作台。</p>
+      </div>
+      <div class="status" id="health">检查服务中...</div>
+    </header>
+
+    <section id="dashboard" class="view active">
+      <div class="home-hero">
+        <div class="home-copy">
+          <span>为智驾传感器产品团队设计</span>
+          <h2>从市场变化到产品决策，一屏完成判断</h2>
+          <p>AutoSense AI 面向车载激光雷达产品经理、战略市场、售前方案和研发协同团队。它把公开情报、竞品变化、客户字段和速腾产品画像整合成机会判断、方案建议和下一步动作。</p>
+          <div class="hero-actions">
+            <button onclick="runMonitorNow()">刷新市场雷达</button>
+            <button class="secondary" onclick="goView('decision')">查看决策中心</button>
+            <button class="secondary" onclick="goView('requirements')">进入需求分析</button>
+          </div>
+        </div>
+        <div class="home-focus">
+          <h2>当前最该关注</h2>
+          <div id="homeFocus" class="focus-card">正在读取机会池...</div>
+        </div>
+      </div>
+
+      <div class="audience-section">
+        <div class="section-title">
+          <h2>常用工作场景</h2>
+          <p>系统按日常工作动作组织内容，先给结论和下一步，再保留来源与细节。</p>
+        </div>
+        <div class="audience-grid">
+          <article class="audience-card">
+            <strong>判断机会</strong>
+            <p>快速看清一条市场变化是否值得进入需求池，以及它和我方产品线的关系。</p>
+          </article>
+          <article class="audience-card">
+            <strong>准备方案</strong>
+            <p>把客户场景、缺失字段、规格假设、风险和验收指标整理成方案草案。</p>
+          </article>
+          <article class="audience-card">
+            <strong>应对竞品</strong>
+            <p>查看竞品威胁、客户可能关心的问题、我方回应和需要准备的证明材料。</p>
+          </article>
+          <article class="audience-card">
+            <strong>推进协同</strong>
+            <p>把研发验证、测试验收、售前材料和客户确认项转成后续跟进动作。</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="core-actions">
+        <article class="core-card">
+          <span>01</span>
+          <h2>发现机会</h2>
+          <p>自动检索新闻、RSS和重点页面，识别客户机会、竞品动态和政策风险。</p>
+          <button onclick="runMonitorNow()">立即刷新</button>
+        </article>
+        <article class="core-card">
+          <span>02</span>
+          <h2>形成判断</h2>
+          <p>用证据链、市场地图、竞品作战卡和供应商评分卡解释机会是否值得跟进。</p>
+          <button onclick="goView('decision')">进入决策中心</button>
+        </article>
+        <article class="core-card">
+          <span>03</span>
+          <h2>输出方案</h2>
+          <p>把客户缺失字段、研发验证、测试验收和售前材料转成产品方案草案。</p>
+          <button onclick="goView('proposals')">查看产品方案</button>
+        </article>
+        <article class="core-card">
+          <span>04</span>
+          <h2>推进协同</h2>
+          <p>把产品动作发送到研发、售前、CRM或团队协同工具，形成闭环跟进。</p>
+          <button onclick="goView('integrations')">推进任务</button>
+        </article>
+      </div>
+
+      <div class="home-snapshot">
+        <div class="snapshot-item"><span>高机会情报</span><strong id="mNews">0</strong></div>
+        <div class="snapshot-item"><span>竞品样本</span><strong id="mCmp">0</strong></div>
+        <div class="snapshot-item"><span>客户需求</span><strong id="mReq">0</strong></div>
+        <div class="snapshot-item"><span>路线图动作</span><strong id="homeRoadmapCount">0</strong></div>
+      </div>
+
+      <div id="executiveResult" class="executive-result"></div>
+
+      <div class="guided-section">
+        <div class="section-title">
+          <h2>推荐使用路径</h2>
+          <p>第一次使用只需要走四步：刷新、判断、拆解、推进。更多配置放在侧边栏下方。</p>
+        </div>
+        <div class="workflow">
+          <div class="step done">
+            <span>1</span>
+            <strong>刷新情报</strong>
+            <p>系统自动抓取公开市场信号，不需要手工输入新闻链接。</p>
+            <button onclick="runMonitorNow()">刷新</button>
+          </div>
+          <div class="step">
+            <span>2</span>
+            <strong>看决策中心</strong>
+            <p>先看证据链、市场地图、竞品作战卡和供应商评分卡。</p>
+            <button onclick="goView('decision')">查看</button>
+          </div>
+          <div class="step">
+            <span>3</span>
+            <strong>拆解需求</strong>
+            <p>把高机会线索转成客户字段、缺失项和待确认问题。</p>
+            <button onclick="goView('requirements')">拆解</button>
+          </div>
+          <div class="step">
+            <span>4</span>
+            <strong>生成方案</strong>
+            <p>基于我方产品、客户需求和竞品证据生成方案草案。</p>
+            <button onclick="goView('proposals')">生成</button>
+          </div>
+          <div class="step">
+            <span>5</span>
+            <strong>持续评测</strong>
+            <p>把研发验证、测试验收和售前材料转成外部协同任务。</p>
+            <button onclick="goView('evals')">查看</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="monitor-hero secondary-monitor">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>后台监控</h2>
+              <p class="hint">定时检索公开新闻源，结合产品画像和DeepSeek分析市场机会、竞品动态与客户线索。</p>
+            </div>
+            <div class="button-row">
+              <button onclick="runMonitorNow()">立即刷新情报</button>
+              <button onclick="startMonitor()">启动定时监控</button>
+              <button onclick="stopMonitor()">停止</button>
+            </div>
+          </div>
+          <div class="monitor-status" id="monitorStatus">监控状态读取中...</div>
+        </div>
+      </div>
+
+      <div class="ops-grid">
+        <div class="panel">
+          <h2>系统运行状态</h2>
+          <div id="opsStatus" class="ops-status"></div>
+        </div>
+        <div class="panel">
+          <h2>高机会池</h2>
+          <div id="opportunityPool" class="list"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>最新市场机会</h2>
+            <p class="hint">信息流放在这里用于追溯来源；首页第一屏优先展示核心动作。</p>
+          </div>
+          <button onclick="refreshAll()">刷新</button>
+        </div>
+        <div id="topNews" class="list"></div>
+      </div>
+    </section>
+
+    <section id="decision" class="view">
+      <div class="decision-hero">
+        <div>
+          <h2>本轮产品判断</h2>
+          <p id="decisionAnswer">正在生成产品决策说明...</p>
+        </div>
+        <div class="button-row">
+          <button onclick="refreshDecisionCenter()">刷新决策中心</button>
+          <button onclick="runMonitorNow()">刷新市场情报</button>
+        </div>
+      </div>
+      <div class="decision-kpis">
+        <div class="metric"><span>证据链结论</span><strong id="dEvidence">0</strong></div>
+        <div class="metric"><span>竞品作战卡</span><strong id="dBattle">0</strong></div>
+        <div class="metric"><span>需求优先级</span><strong id="dReq">0</strong></div>
+        <div class="metric"><span>路线图动作</span><strong id="dRoadmap">0</strong></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>证据链市场结论</h2>
+            <p class="hint">每条结论都保留事实、推断、影响、来源和待确认问题。</p>
+          </div>
+        </div>
+        <div id="evidenceChain" class="evidence-list"></div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h2>竞品作战卡</h2>
+          <div id="battlecards" class="list"></div>
+        </div>
+        <div class="panel">
+          <h2>需求优先级</h2>
+          <div id="requirementPriority" class="list"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>路线图动作</h2>
+        <div id="roadmapActions" class="roadmap"></div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h2>市场地图</h2>
+          <div id="marketMap" class="map-list"></div>
+        </div>
+        <div class="panel">
+          <h2>情报简报</h2>
+          <div id="briefingPanel"></div>
+        </div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h2>Win/Loss 复盘</h2>
+          <div id="winLossPanel" class="list"></div>
+        </div>
+        <div class="panel">
+          <h2>供应商评分卡</h2>
+          <div id="supplierScorecards" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="intel" class="view">
+      <div class="toolbar">
+        <button onclick="runMonitorNow()">立即刷新情报</button>
+        <button onclick="startMonitor()">启动定时监控</button>
+        <button onclick="stopMonitor()">停止监控</button>
+      </div>
+      <div class="panel">
+        <h2>自动检索配置</h2>
+        <p class="hint">这里配置系统后台自动检索的主题，不需要逐条输入新闻网页。系统会按这些主题自动检索公开新闻源。</p>
+        <div class="input-grid monitor-config">
+          <label>监控主题
+            <textarea id="monitorQueries">automotive lidar ADAS L3 Europe
+LiDAR high level autonomous driving OEM design win
+车载 激光雷达 高阶智驾 定点 量产</textarea>
+          </label>
+          <label>补充RSS源
+            <textarea id="monitorRss" placeholder="可选，每行一个RSS URL"></textarea>
+          </label>
+          <label>重点官网/法规页面
+            <textarea id="monitorUrls" placeholder="可选，每行一个官网、法规页或竞品页面URL"></textarea>
+          </label>
+          <div>
+            <label>抓取间隔（分钟）
+              <input id="monitorInterval" value="30" aria-label="抓取间隔">
+            </label>
+            <label>推送阈值
+              <input id="pushThreshold" value="80" aria-label="推送阈值">
+            </label>
+            <label>推送渠道
+              <input id="pushChannels" value="crm" aria-label="推送渠道">
+            </label>
+            <button onclick="saveMonitorConfig()">保存自动检索配置</button>
+          </div>
+        </div>
+      </div>
+      <div id="newsList" class="grid"></div>
+      <div class="panel">
+        <h2>机会分析结果</h2>
+        <div id="opportunityAnalysis"></div>
+      </div>
+    </section>
+
+    <section id="requirements" class="view">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>自动需求拆解</h2>
+            <p class="hint">需求来自高机会情报、客户线索和产品画像，不依赖手工编写。系统会先检查客户信息是否完整，再生成待确认问题。</p>
+          </div>
+          <button onclick="analyzeTopOpportunity()">从最高机会生成需求</button>
+        </div>
+        <div id="requirementInsight" class="grid"></div>
+      </div>
+      <details class="panel">
+        <summary>客户补充信息录入</summary>
+        <p class="hint">当销售或售前拿到更完整客户信息时，可以在这里补充，系统会重新拆解需求。</p>
+        <div class="panel">
+          <h2>录入客户需求</h2>
+          <input id="customerName" value="匿名欧洲车企" aria-label="客户名称">
+          <input id="region" value="Europe" aria-label="地区">
+          <textarea id="rawRequirement">欧洲某车企计划在2027年量产L3车型，需要一款适配高速NOA和拥堵自动驾驶场景的前向长距激光雷达，要求远距离探测、低功耗、满足车规可靠性，并希望供应商提供英文技术材料和测试报告。</textarea>
+          <button onclick="createRequirement()">AI拆解需求</button>
+        </div>
+        <div class="panel">
+          <h2>拆解结果</h2>
+          <div id="requirementResult" class="result-card"></div>
+        </div>
+      </details>
+      <div id="requirementList" class="list"></div>
+    </section>
+
+    <section id="competitors" class="view">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>实时竞品动态</h2>
+            <p class="hint">系统自动检索 Hesai、Luminar、Innoviz、Aeva 等公开动态，并用DeepSeek分析对速腾产品线的影响。</p>
+          </div>
+          <button onclick="refreshCompetitorIntel()">刷新竞品动态</button>
+        </div>
+        <div id="competitorIntel"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>竞品 Battlecard</h2>
+            <p class="hint">不是泛泛对比参数，而是把竞品威胁转成售前交流和产品评审可用的反击点。</p>
+          </div>
+          <button onclick="refreshDecisionCenter()">更新作战卡</button>
+        </div>
+        <div id="competitorBattlecards" class="grid"></div>
+      </div>
+      <div id="competitorTable" class="table-wrap"></div>
+    </section>
+
+    <section id="capabilities" class="view">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>版本规划</h2>
+            <p class="hint">展示当前可用能力、增强中的能力和后续生产化方向，帮助团队理解系统边界。</p>
+          </div>
+          <button onclick="refreshDecisionCenter()">刷新路线图</button>
+        </div>
+        <div class="capability-board">
+          <div>
+            <h2>当前可用</h2>
+            <div id="capP0" class="capability-list"></div>
+          </div>
+          <div>
+            <h2>增强中</h2>
+            <div id="capP1" class="capability-list"></div>
+          </div>
+          <div>
+            <h2>后续规划</h2>
+            <div id="capP2" class="capability-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="differentiation" class="view">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>产品价值</h2>
+            <p class="hint">这里说明系统如何帮助团队更快完成机会判断、方案准备和跨团队协同。</p>
+          </div>
+          <button onclick="refreshDecisionCenter()">刷新亮点</button>
+        </div>
+        <div id="differentiationList" class="diff-grid"></div>
+      </div>
+      <div class="panel">
+        <h2>为什么适合这类工作</h2>
+        <div class="compare-grid">
+          <div><strong>看得见来源</strong><p>市场结论会保留来源、影响判断和待确认问题，方便团队复核。</p></div>
+          <div><strong>连得上产品</strong><p>每条机会都会尝试关联我方产品线、目标场景和客户字段完整性。</p></div>
+          <div><strong>转得成动作</strong><p>系统会把机会拆成需求、竞品应对、方案草案和后续协同任务。</p></div>
+          <div><strong>留得住经验</strong><p>情报、方案、知识库和评测记录会沉淀下来，便于复盘和持续优化。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="profile" class="view">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>产品画像</h2>
+            <p class="hint">这里决定系统如何判断市场机会是否匹配我方产品。日常维护时只需要添加、删除或修改卡片。</p>
+          </div>
+          <button onclick="saveProfile()">保存画像</button>
+        </div>
+        <div class="profile-basic">
+          <label>公司名称
+            <input id="profileCompany" aria-label="公司名称">
+          </label>
+          <label>定位
+            <textarea id="profilePositioning"></textarea>
+          </label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>产品线</h2>
+            <p class="hint">每张卡代表一条可被市场情报匹配的产品线。</p>
+          </div>
+          <button onclick="addProductLine()">添加产品</button>
+        </div>
+        <div id="productEditor" class="module-list"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>目标客户</h2>
+            <p class="hint">系统会用目标客户画像判断机会所在区域、客户类型和决策因素。</p>
+          </div>
+          <button onclick="addTargetCustomer()">添加客户类型</button>
+        </div>
+        <div id="customerEditor" class="module-list"></div>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <h2>机会关键词</h2>
+          <p class="hint">命中这些词时，系统会提高关注度。</p>
+          <textarea id="profileKeywords" placeholder="每行一个关键词"></textarea>
+          <h2>排除关键词</h2>
+          <p class="hint">命中这些词时，系统会降低相关性。</p>
+          <textarea id="profileExclusions" placeholder="每行一个排除词"></textarea>
+        </div>
+        <div class="panel">
+          <h2>客户信息要求</h2>
+          <p class="hint">市场机会进入机会池后，系统会按这些字段检查客户信息是否完整。</p>
+          <textarea id="customerRequiredFields"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section id="proposals" class="view">
+      <div class="panel">
+        <h2>产品方案生成依据</h2>
+        <div class="basis-grid">
+          <div><strong>我方产品</strong><p>速腾聚创产品画像：EM4、EMX、E1、M1 Plus、P6。</p></div>
+          <div><strong>客户需求</strong><p>来自机会池和客户字段完整性检查，包括场景、性能、成本、车规、交付物。</p></div>
+          <div><strong>市场与竞品</strong><p>实时公开新闻、竞品动态、竞品参数库和DeepSeek分析依据。</p></div>
+          <div><strong>AI评测</strong><p>记录覆盖率、可追溯性、幻觉风险和人工采纳状态。</p></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>生成产品方案</h2>
+          <button onclick="generateProposal()">基于最新需求生成</button>
+        </div>
+        <div id="proposalResult" class="result-card"></div>
+      </div>
+      <div id="proposalList" class="list"></div>
+    </section>
+
+    <section id="rag" class="view">
+      <div class="panel knowledge-intro">
+        <h2>资料依据库是什么</h2>
+        <p>资料依据库用于存放产品手册、测试说明、客户纪要、法规摘要和方案备忘录。之后提问时，AI会优先基于这些资料回答，并标明参考资料，减少凭空生成。</p>
+      </div>
+      <div class="knowledge-grid">
+        <div class="panel">
+          <h2>添加资料</h2>
+          <p class="hint">适合保存方案备忘录、测试口径、客户交流纪要等内部依据。</p>
+          <input id="docTitle" value="L3前向激光雷达方案备忘录" aria-label="文档标题">
+          <textarea id="docContent">L3高速NOA场景需要关注前向长距探测、低反射率目标识别、功能安全、车规可靠性、功耗和安装空间。关键参数必须标注测试条件和来源。</textarea>
+          <button onclick="saveDoc()">保存到资料库</button>
+        </div>
+        <div class="panel">
+          <h2>基于资料提问</h2>
+          <p class="hint">系统会先检索资料库，再生成回答和参考来源。</p>
+          <input id="ragQuery" value="L3高速NOA前向激光雷达需要哪些验收指标？" aria-label="RAG问题">
+          <button onclick="askRag()">检索并回答</button>
+          <div id="ragAnswer" class="result-card"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>资料列表</h2>
+            <p class="hint">已保存的资料会作为后续问答和方案生成的参考依据。</p>
+          </div>
+        </div>
+        <div id="docList" class="module-list"></div>
+      </div>
+    </section>
+
+    <section id="evals" class="view">
+      <div class="panel">
+        <h2>AI质量看板</h2>
+        <div id="evalList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="integrations" class="view">
+      <div class="split">
+        <div class="panel">
+          <h2>推送外部系统</h2>
+          <select id="integrationType">
+            <option value="jira">Jira/研发任务</option>
+            <option value="feishu">飞书/团队协同</option>
+            <option value="crm">CRM/客户机会</option>
+            <option value="slack">Slack/海外团队</option>
+          </select>
+          <input id="integrationTarget" value="AutoSense Monitor" aria-label="目标">
+          <textarea id="integrationPayload">L3前向激光雷达产品方案评审
+优先级：P1
+负责人：产品经理
+下一步：研发可行性评审</textarea>
+          <button onclick="sendIntegration()">发送/模拟发送</button>
+        </div>
+        <div class="panel">
+          <h2>结果</h2>
+          <div id="integrationResult" class="result-card"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="system" class="view">
+      <div class="grid fit-grid">
+        <article class="card">
+          <h2>系统覆盖范围</h2>
+          <ul>
+            <li>市场机会监控：自动检索公开新闻源，识别客户机会、竞品动态和政策变化。</li>
+            <li>客户需求管理：将机会线索转成客户字段、缺失项、待确认问题和优先级。</li>
+            <li>产品方案生成：基于速腾产品画像、竞品动态和客户需求生成方案草案。</li>
+            <li>研发与验收：输出研发任务、测试指标、风险和待确认参数。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>AI工作机制</h2>
+          <ul>
+            <li>DeepSeek用于情报摘要、机会评分、需求拆解、竞品影响分析和方案生成。</li>
+            <li>无有效Key时系统降级为规则分析，并在状态栏明确显示未接入。</li>
+            <li>关键结论保留来源、评分、缺失字段和待确认项，避免直接对外承诺。</li>
+            <li>AI评测记录覆盖率、可追溯性和幻觉风险。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>速腾业务上下文</h2>
+          <ul>
+            <li>产品画像覆盖 EM4、EMX、E1、M1 Plus、P6。</li>
+            <li>目标场景覆盖 L2+/L3、城市NOA、高速NOA、Robotaxi、补盲和泊车。</li>
+            <li>客户字段覆盖量产时间、性能指标、成本目标、车规要求、竞品供应商状态。</li>
+            <li>竞品监控覆盖 Hesai、Luminar、Innoviz、Aeva 等公开动态。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>使用边界</h2>
+          <p>系统生成的是产品决策初稿，不是正式报价、正式技术承诺或客户最终交付物。</p>
+          <p>所有硬件参数、车规认证、功能安全等级、交付周期都必须经过研发、测试、质量和商务确认。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="config" class="view">
+      <div class="split">
+        <div class="panel">
+          <h2>DeepSeek接口</h2>
+          <p class="hint">填写后系统会优先使用DeepSeek进行需求拆解、方案生成和RAG问答。Key只保存在本机项目目录的 `.env` 文件。</p>
+          <label>API Key</label>
+          <input id="deepseekKey" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" aria-label="DeepSeek API Key">
+          <label>Base URL</label>
+          <input id="deepseekBaseUrl" value="https://api.deepseek.com" aria-label="DeepSeek Base URL">
+          <label>模型</label>
+          <input id="deepseekModel" value="deepseek-v4-flash" aria-label="DeepSeek Model">
+          <div class="button-row">
+            <button onclick="saveConfig()">保存配置</button>
+            <button onclick="testLLM()">测试连接</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>其他API</h2>
+          <label>NewsAPI Key</label>
+          <input id="newsApiKey" type="password" aria-label="NewsAPI Key">
+          <label>Bing Search Key</label>
+          <input id="bingKey" type="password" aria-label="Bing Search Key">
+          <label>SerpAPI Key</label>
+          <input id="serpKey" type="password" aria-label="SerpAPI Key">
+          <p class="hint">新闻API不是必填。没有Key时，系统会使用公开RSS源和本地规则分析保证链路可运行。</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>配置状态</h2>
+        <div id="configStatus" class="status-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js?v=20260707-modules"></script>
+</body>
+</html>
